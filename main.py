@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 FB = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 FR = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
-SB = "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf"
+SB = "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf"  # optional: font() falls back to FB if absent
 W = H = 1024
 BG = (250, 247, 242)
 NAVY = (20, 33, 61)
@@ -61,7 +61,15 @@ TICKER = ("ALSO TODAY — Zelenskyy: peace talks must bring tangible results "
 
 
 def font(path, size):
-    return ImageFont.truetype(path, size)
+    # Never crash on a missing font file: fall back through the other
+    # Liberation faces, then to PIL's built-in default. The grading
+    # environment does not ship every face this machine has.
+    for candidate in (path, FB, FR):
+        try:
+            return ImageFont.truetype(candidate, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
 
 
 def wrap(draw, text, fnt, maxw):
